@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Infinite Scroll</title>
+    <style>
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      .container {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f2f2f2;
+      }
+
+      #loading {
+        position: absolute;
+        left: 3rem;
+        top: 1rem;
+        display: none;
+      }
+
+      #list-container {
+        height: 80%;
+        width: 50%;
+        border-radius: 10px;
+        padding: 1.5rem;
+        border: solid 1px gray;
+        overflow-y: auto;
+      }
+
+      #list-bottom {
+        width: 100%;
+        height: 10px;
+        background-color: blue;
+      }
+
+      #list-items {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        position: relative;
+        padding: 1rem;
+      }
+
+      #list-items > div {
+        height: 30%;
+        width: 25%;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: pink;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="loading">Fetching...</div>
+      <section id="list-container">
+        <div id="list-items"></div>
+        <div id="list-bottom"></div>
+      </section>
+    </div>
+
+    <script>
+      const listBottom = document.getElementById("list-bottom");
+      const listItems = document.getElementById("list-items");
+      const loading = document.getElementById("loading");
+
+      let skip = 30;
+
+      const getProducts = async () => {
+        loading.style.display = "block";
+
+        const { products } = await (
+          await fetch(
+            `https://dummyjson.com/products?limit=30&skip=${skip}&select=images`
+          )
+        ).json();
+
+        skip += 30;
+        loading.style.display = "none";
+
+        return products;
+      };
+
+      const addProductsToList = (products) => {
+        products.forEach((p) => {
+          const productCard = document.createElement("div");
+          const image = document.createElement("img");
+          image.src = p.images[0];
+          image.style.width = "150px";
+          image.style.height = "150px";
+          productCard.appendChild(image);
+
+          listItems.appendChild(productCard);
+        });
+      };
+
+      // Set the bottom list observer
+      const observer = new IntersectionObserver(async ([entry]) => {
+        if (entry.isIntersecting) {
+          addProductsToList(await getProducts());
+        }
+      });
+      observer.observe(listBottom);
+    </script>
+  </body>
+</html>
